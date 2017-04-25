@@ -4,14 +4,26 @@
 
 (defn editor []
   (fn []
-    (let [focus @(re-frame/subscribe [:focused])]
-      [:div
-       [re-com/title
-        :label (:title focus)
-        :level :level1]
-       [re-com/title
-        :label (:body focus)
-        :level :level2]])))
+    (let [new-entry @(re-frame/subscribe [:new-entry])]
+      [re-com/v-box
+       :height   "auto"
+       :gap      "10px"
+       :children [
+                  [re-com/input-text
+                   :model (or (:title new-entry) "")
+                   :on-change #(re-frame/dispatch [:on-change-title %])
+                   :placeholder "new entry"
+                   ]
+                  [re-com/input-textarea
+                   :model (or (:body new-entry) "")
+                   :on-change #(re-frame/dispatch [:on-change-body %])
+                   :placeholder "body"
+                   ]
+                  [re-com/button
+                   :label "save"
+                   :on-click #(re-frame/dispatch [:new-entry-save])
+                   ]
+                  ]])))
 
 (defn entry []
   (fn []
@@ -27,33 +39,35 @@
 (defn entries []
   (fn []
     (let [entries @(re-frame/subscribe [:entries])
-          focus   @(re-frame/subscribe [:focused])]
+          focus   @(re-frame/subscribe [:focused])
+          mode   @(re-frame/subscribe [:mode])]
       [:ul
        (for [entry- entries] ^{:key entry-}
          [:li
           {
            :on-click #(re-frame/dispatch [:focus entry-])
-           :style {:color (if (= entry- focus) :purple :gray)}
+           :style {:color (if (and (= mode :read) (= entry- focus)) :purple :gray)}
            }
           (:title entry-)])]
       )))
 
 (defn panel []
   (fn []
-    [re-com/h-box
-     :size "none"
-     :children [
-                [re-com/box
-                 :child [entries]
-                 :size "auto"
-                 :min-width "50px"
-                 :max-width "100px"]
-                [re-com/box
-                 :child [entry]
-                 :size "auto"
-                 :min-width "100px"
-                 :max-width "200px"]
-                ]]))
+    (let [mode @(re-frame/subscribe [:mode])]
+      [re-com/h-box
+       :size "none"
+       :children [
+                  [re-com/box
+                   :child [entries]
+                   :size "auto"
+                   :min-width "100px"
+                   :max-width "200px"]
+                  [re-com/box
+                   :child [(if (= mode :read) entry editor)]
+                   :size "auto"
+                   :min-width "100px"
+                   :max-width "200px"]
+                  ]])))
 
 (defn main-panel []
   (fn []
@@ -80,9 +94,9 @@
                              :min-width "100px"
                              ]
                             [re-com/box
-                             :child [re-com/title
+                             :child [re-com/button
                                      :label "new entry"
-                                     :level :level3
+                                     :on-click #(re-frame/dispatch [:new-entry])
                                      ]
                              :size "auto"
                              :align-self :stretch

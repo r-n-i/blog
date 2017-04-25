@@ -16,3 +16,18 @@
  :focused
  (fn [db]
    (:focus db)))
+
+(re-frame/reg-sub
+ :new-entry
+ (fn [db]
+   (:new-entry db)))
+
+(re-frame/reg-sub
+ :mode
+ (fn [db]
+   (:mode db)))
+
+(re-frame/reg-sub
+ :new-entry-title
+ (fn [db]
+   (:title (:new-entry db))))

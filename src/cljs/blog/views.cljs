@@ -41,6 +41,7 @@
     (let [entries @(re-frame/subscribe [:entries])
           focus   @(re-frame/subscribe [:focused])
           mode   @(re-frame/subscribe [:mode])]
+      (println entries)
       [:ul
        (for [entry- entries] ^{:key entry-}
          [:li
@@ -93,6 +94,16 @@
                              :align-self :stretch
                              :min-width "100px"
                              ]
+                            [re-com/box
+                             :child [re-com/button
+                                     :label "get"
+                                     :on-click #(re-frame/dispatch [:get-entries])
+                                     ]
+                             :size "auto"
+                             :align-self :stretch
+                             :align :end
+                             :min-width "100px"
+                             :max-width "100px"]
                             [re-com/box
                              :child [re-com/button
                                      :label "new entry"

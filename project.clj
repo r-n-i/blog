@@ -3,13 +3,18 @@
                  [org.clojure/clojurescript "1.9.229"]
                  [reagent "0.6.0"]
                  [re-frame "0.9.2"]
+                 [cljs-ajax "0.5.9"]
                  [org.clojure/core.async "0.2.391"]
                  [re-com "2.0.0"]
                  [compojure "1.5.0"]
                  [yogthos/config "0.8"]
+                 [mysql/mysql-connector-java "5.1.6"]
+                 [korma "0.4.0"]
+                 [migratus "0.9.0"]
                  [ring "1.4.0"]]
 
-  :plugins [[lein-cljsbuild "1.1.4"]]
+  :plugins [[lein-cljsbuild "1.1.4"]
+            [migratus-lein "0.4.4"]]
 
   :min-lein-version "2.5.3"
 
@@ -60,4 +65,12 @@
   :uberjar-name "blog.jar"
 
   :prep-tasks [["cljsbuild" "once" "min"] "compile"]
+
+  :migratus {:store :database
+             :migration-dir "migrations"
+             :db {:classname "com.mysql.jdbc.Driver"
+                  :subprotocol "mysql"
+                  :subname "//localhost/blog"
+                  :user "root"
+                  :password ""}}
   )

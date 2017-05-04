@@ -28,6 +28,11 @@
    (:mode db)))
 
 (re-frame/reg-sub
+ :error
+ (fn [db]
+   (:error db)))
+
+(re-frame/reg-sub
  :new-entry-title
  (fn [db]
    (:title (:new-entry db))))

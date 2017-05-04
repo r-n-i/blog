@@ -21,7 +21,7 @@
                    ]
                   [re-com/button
                    :label "save"
-                   :on-click #(re-frame/dispatch [:new-entry-save])
+                   :on-click #(re-frame/dispatch [:post])
                    ]
                   ]])))
 
@@ -40,8 +40,7 @@
   (fn []
     (let [entries @(re-frame/subscribe [:entries])
           focus   @(re-frame/subscribe [:focused])
-          mode   @(re-frame/subscribe [:mode])]
-      (println entries)
+          mode    @(re-frame/subscribe [:mode])]
       [:ul
        (for [entry- entries] ^{:key entry-}
          [:li
@@ -72,6 +71,7 @@
 
 (defn main-panel []
   (fn []
+    (let [error @(re-frame/subscribe [:error])]
     [re-com/v-box
      :height   "auto"
      :gap      "10px"
@@ -94,6 +94,26 @@
                              :align-self :stretch
                              :min-width "100px"
                              ]
+                            [re-com/box
+                             :child [re-com/button
+                                     :label "delete"
+                                     :on-click #(re-frame/dispatch [:delete])
+                                     ]
+                             :size "auto"
+                             :align-self :stretch
+                             :align :end
+                             :min-width "100px"
+                             :max-width "100px"]
+                            [re-com/box
+                             :child [re-com/button
+                                     :label "post"
+                                     :on-click #(re-frame/dispatch [:post])
+                                     ]
+                             :size "auto"
+                             :align-self :stretch
+                             :align :end
+                             :min-width "100px"
+                             :max-width "100px"]
                             [re-com/box
                              :child [re-com/button
                                      :label "get"
@@ -119,5 +139,9 @@
                 [re-com/line
                  :size  "3px"
                  :color "red"]
+                [re-com/alert-box
+                 :heading error
+                 :style {:display (if error :inherit :none)}
+                 ]
                 [panel]
-                ]]))
+                ]])))

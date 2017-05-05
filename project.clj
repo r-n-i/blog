@@ -13,6 +13,7 @@
                  [mysql/mysql-connector-java "5.1.6"]
                  [korma "0.4.0"]
                  [migratus "0.9.0"]
+                 [buddy "1.3.0"]
                  [ring "1.4.0"]]
 
   :plugins [[lein-cljsbuild "1.1.4"]

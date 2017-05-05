@@ -33,6 +33,11 @@
    (:error db)))
 
 (re-frame/reg-sub
+ :auth
+ (fn [db]
+   (:auth db)))
+
+(re-frame/reg-sub
  :new-entry-title
  (fn [db]
    (:title (:new-entry db))))

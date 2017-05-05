@@ -69,79 +69,101 @@
                    :max-width "200px"]
                   ]])))
 
+(defn new-entry-button []
+  (fn []
+    [re-com/button
+     :label "new entry"
+     :on-click #(re-frame/dispatch [:new-entry])
+     ]))
+
+(defn login-button []
+  (fn []
+    [re-com/button
+     :label "login"
+     :on-click #(re-frame/dispatch [:login])
+     ]))
+
 (defn main-panel []
   (fn []
-    (let [error @(re-frame/subscribe [:error])]
-    [re-com/v-box
-     :height   "auto"
-     :gap      "10px"
-     :children [
-                [re-com/h-box
-                 :align :baseline
-                 :children [
-                            [re-com/box
-                             :child [re-com/title
-                                     :label "blog"
-                                     :level :level1]
-                             :size "auto"
-                             :align-self :stretch
-                             :align :end
-                             :min-width "100px"
-                             :max-width "200px"]
-                            [re-com/box
-                             :child ""
-                             :size "auto"
-                             :align-self :stretch
-                             :min-width "100px"
-                             ]
-                            [re-com/box
-                             :child [re-com/button
-                                     :label "delete"
-                                     :on-click #(re-frame/dispatch [:delete])
-                                     ]
-                             :size "auto"
-                             :align-self :stretch
-                             :align :end
-                             :min-width "100px"
-                             :max-width "100px"]
-                            [re-com/box
-                             :child [re-com/button
-                                     :label "post"
-                                     :on-click #(re-frame/dispatch [:post])
-                                     ]
-                             :size "auto"
-                             :align-self :stretch
-                             :align :end
-                             :min-width "100px"
-                             :max-width "100px"]
-                            [re-com/box
-                             :child [re-com/button
-                                     :label "get"
-                                     :on-click #(re-frame/dispatch [:get-entries])
-                                     ]
-                             :size "auto"
-                             :align-self :stretch
-                             :align :end
-                             :min-width "100px"
-                             :max-width "100px"]
-                            [re-com/box
-                             :child [re-com/button
-                                     :label "new entry"
-                                     :on-click #(re-frame/dispatch [:new-entry])
-                                     ]
-                             :size "auto"
-                             :align-self :stretch
-                             :align :end
-                             :min-width "100px"
-                             :max-width "100px"]
+    (let [error @(re-frame/subscribe [:error])
+          auth  @(re-frame/subscribe [:auth])]
+      [re-com/v-box
+       :height   "auto"
+       :gap      "10px"
+       :children [
+                  [re-com/h-box
+                   :align :baseline
+                   :children [
+                              [re-com/box
+                               :child [re-com/title
+                                       :label "blog"
+                                       :level :level1]
+                               :size "auto"
+                               :align-self :stretch
+                               :align :end
+                               :min-width "100px"
+                               :max-width "200px"]
+                              [re-com/box
+                               :child ""
+                               :size "auto"
+                               :align-self :stretch
+                               :min-width "100px"
+                               ]
+                              [re-com/box
+                               :child [re-com/button
+                                       :label "auth"
+                                       :on-click #(re-frame/dispatch [:auth])
+                                       ]
+                               :size "auto"
+                               :align-self :stretch
+                               :align :end
+                               :min-width "100px"
+                               :max-width "100px"]
+                              [re-com/box
+                               :child [re-com/button
+                                       :label "delete"
+                                       :on-click #(re-frame/dispatch [:delete])
+                                       ]
+                               :size "auto"
+                               :align-self :stretch
+                               :align :end
+                               :min-width "100px"
+                               :max-width "100px"]
+                              [re-com/box
+                               :child [re-com/button
+                                       :label "post"
+                                       :on-click #(re-frame/dispatch [:post])
+                                       ]
+                               :size "auto"
+                               :align-self :stretch
+                               :align :end
+                               :min-width "100px"
+                               :max-width "100px"]
+                              [re-com/box
+                               :child [re-com/button
+                                       :label "get"
+                                       :on-click #(re-frame/dispatch [:get-entries])
+                                       ]
+                               :size "auto"
+                               :align-self :stretch
+                               :align :end
+                               :min-width "100px"
+                               :max-width "100px"]
+                              [re-com/box
+                               :child (if auth [new-entry-button] [login-button])
+                               :size "auto"
+                               :align-self :stretch
+                               :align :end
+                               :min-width "100px"
+                               :max-width "100px"]
 
-                            ]]
-                [re-com/line
-                 :size  "3px"
-                 :color "red"]
-                [re-com/alert-box
-                 :heading error
-                 :style {:display (if error :inherit :none)}
-                 ]
-                [panel]
-                ]])))
+                              ]]
+                  [re-com/line
+                   :size  "3px"
+                   :color "red"]
+                  [re-com/alert-box
+                   :heading error
+                   :style {:display (if error :inherit :none)}
+                   ]
+                  [panel]
+                  ]])))

@@ -66,6 +66,11 @@
   (fn [db [_ res]]
     (assoc-in db [:token] (:token res))))
 
+(re-frame/reg-event-db
+  :switch-editor-mode
+  (fn [db [_ mode]]
+    (assoc-in db [:editor-mode] mode)))
+
 (re-frame/reg-cofx
   :token
   (fn [coeffects _]

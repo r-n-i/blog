@@ -1,8 +1,10 @@
 (ns blog.views
   (:require [re-frame.core :as re-frame]
-            [re-com.core :as re-com]))
+            [re-com.core :as re-com]
+            [reagent.core :as reagent]
+            [markdown.core :as markdown]))
 
-(defn editor []
+(defn inputs []
   (fn []
     (let [new-entry @(re-frame/subscribe [:new-entry])]
       [re-com/v-box
@@ -18,12 +20,47 @@
                    :model (or (:body new-entry) "")
                    :on-change #(re-frame/dispatch [:on-change-body %])
                    :placeholder "body"
-                   ]
+                   ]]])))
+
+(defn react-raw [raw-html-str]
+  "A React component that renders raw html."
+  (.div (.-DOM js/React)
+        (clj->js {:key (str (hash raw-html-str))
+                  :dangerouslySetInnerHTML {:__html raw-html-str}})))
+
+(defn preview []
+  (fn []
+    (let [new-entry @(re-frame/subscribe [:new-entry])]
+      [re-com/v-box
+       :height   "auto"
+       :gap      "10px"
+       :children [
+                  [re-com/title
+                   :label (:title new-entry)
+                   :level :level1]
+                  (react-raw (markdown/md->html (:body new-entry)))
+                  ]
+       ])))
+
+(defn editor []
+  (fn []
+    (let [new-entry   @(re-frame/subscribe [:new-entry])
+          editor-mode (re-frame/subscribe [:editor-mode])
+          tab-defs    (reagent/atom [{:id nil :label "edit"}
+                                     {:id :preview :label "preview"}])]
+      [re-com/v-box
+       :height   "auto"
+       :gap      "10px"
+       :children [
+                  [re-com/horizontal-tabs
+                   :model     editor-mode
+                   :tabs      tab-defs
+                   :on-change #(re-frame/dispatch [:switch-editor-mode %])]
+                  (if (nil? @editor-mode) [inputs] [preview])
                   [re-com/button
                    :label "save"
                    :on-click #(re-frame/dispatch [:post])
-                   ]
-                  ]])))
+                   ]]])))
 
 (defn entry []
   (fn []
@@ -32,9 +69,8 @@
        [re-com/title
         :label (:title focus)
         :level :level1]
-       [re-com/title
-        :label (:body focus)
-        :level :level2]])))
+       (react-raw (markdown/md->html (:body focus)))
+       ])))
 
 (defn entries []
   (fn []
@@ -73,15 +109,13 @@
   (fn []
     [re-com/button
      :label "new entry"
-     :on-click #(re-frame/dispatch [:new-entry])
-     ]))
+     :on-click #(re-frame/dispatch [:new-entry])]))
 
 (defn login-button []
   (fn []
     [re-com/button
      :label "login"
-     :on-click #(re-frame/dispatch [:login])
-     ]))
+     :on-click #(re-frame/dispatch [:login])]))
 
 (defn main-panel []
   (fn []
@@ -155,15 +189,11 @@
                                :align-self :stretch
                                :align :end
                                :min-width "100px"
-                               :max-width "100px"]
-
-                              ]]
+                               :max-width "100px"]]]
                   [re-com/line
                    :size  "3px"
                    :color "red"]
                   [re-com/alert-box
                    :heading error
-                   :style {:display (if error :inherit :none)}
-                   ]
-                  [panel]
-                  ]])))
+                   :style {:display (if error :inherit :none)}]
+                  [panel]]])))

@@ -14,6 +14,7 @@
                  [korma "0.4.0"]
                  [migratus "0.9.0"]
                  [buddy "1.3.0"]
+                 [markdown-clj "0.9.99"]
                  [ring "1.4.0"]]
 
   :plugins [[lein-cljsbuild "1.1.4"]

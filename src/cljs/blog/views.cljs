@@ -66,11 +66,13 @@
                   [re-com/input-text
                    :model (or (:title new-entry) "")
                    :on-change #(re-frame/dispatch [:on-change-title %])
+                   :change-on-blur? false
                    :placeholder "new entry"
                    ]
                   [re-com/input-textarea
                    :model (or (:body new-entry) "")
                    :on-change #(re-frame/dispatch [:on-change-body %])
+                   :change-on-blur? false
                    :placeholder "body"
                    ]]])))
 
@@ -88,12 +90,19 @@
                   ]
        ])))
 
+(defn input-preview []
+  (fn []
+    [re-com/h-split
+     :panel-1 [inputs]
+     :panel-2 [preview]]))
+
 (defn editor []
   (fn []
     (let [new-entry   @(re-frame/subscribe [:new-entry])
           editor-mode (re-frame/subscribe [:editor-mode])
           tab-defs    (reagent/atom [{:id :input :label "edit"}
-                                     {:id :preview :label "preview"}])]
+                                     {:id :preview :label "preview"}
+                                     {:id :both :label "both"}])]
       [re-com/v-box
        :height   "auto"
        :gap      "10px"
@@ -102,7 +111,10 @@
                    :model     editor-mode
                    :tabs      tab-defs
                    :on-change #(re-frame/dispatch [:switch-editor-mode %])]
-                  (if (= @editor-mode :input) [inputs] [preview])
+                  (case @editor-mode
+                    :input   [inputs]
+                    :preview [preview]
+                    :both    [input-preview])
                   [re-com/button
                    :label "save"
                    :on-click #(re-frame/dispatch [:post])

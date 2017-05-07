@@ -18,7 +18,7 @@
 
 (re-frame/reg-event-fx
   :process-entries
-  (fn [db [_ entries]]
+  (fn [{:keys [db]} [_ entries]]
     {:db (assoc-in db [:entries] entries)
      :dispatch [:focus (first entries)]}))
 
@@ -43,18 +43,32 @@
     (assoc-in db [:new-entry :body] body)))
 
 (re-frame/reg-event-db
+  :on-change-email
+  (fn  [db [_ email]]
+    (assoc-in db [:user-form :email] email)))
+
+(re-frame/reg-event-db
+  :on-change-password
+  (fn  [db [_ password]]
+    (assoc-in db [:user-form :password] password)))
+
+(re-frame/reg-event-fx
   :new-entry-save
-  (fn [db _]
-    (-> db
-        (update-in [:entries] #(conj % (:new-entry db)))
-        (assoc-in  [:mode] :read)
-        (assoc-in  [:focus] (:new-entry db))
-        (assoc-in  [:new-entry] {:title nil :body nil}))))
+  (fn [{:keys [db]} _]
+    {:db (-> db
+             (update-in [:entries] #(vec (conj (lazy-seq %) (:new-entry db))))
+             (assoc-in  [:mode] :read)
+             (assoc-in  [:editor-mode] :input)
+             (assoc-in  [:focus] (:new-entry db))
+             (assoc-in  [:new-entry] {:title nil :body nil}))
+     :dispatch [:get-entries]}))
 
 (re-frame/reg-event-db
   :auth-success
   (fn [db [_ res]]
-    (assoc-in db [:auth] true)))
+    (-> db
+        (assoc-in [:auth] true)
+        (assoc-in [:show-login-modal] false))))
 
 (re-frame/reg-event-db
   :auth-error
@@ -62,14 +76,24 @@
     (assoc-in db [:auth] false)))
 
 (re-frame/reg-event-db
-  :login-success
+  :sign-error
   (fn [db [_ res]]
-    (assoc-in db [:token] (:token res))))
+    (assoc-in db [:sign-error] (:message (:response res)))))
 
 (re-frame/reg-event-db
   :switch-editor-mode
   (fn [db [_ mode]]
     (assoc-in db [:editor-mode] mode)))
+
+(re-frame/reg-event-db
+  :show-login-modal
+  (fn [db [_ mode]]
+    (assoc-in db [:show-login-modal] true)))
+
+(re-frame/reg-event-db
+  :hide-login-modal
+  (fn [db [_ mode]]
+    (assoc-in db [:show-login-modal] false)))
 
 (re-frame/reg-cofx
   :token
@@ -77,54 +101,66 @@
     (assoc coeffects :token (.getItem (.-localStorage js/window) :token))))
 
 (re-frame/reg-event-fx
-  :store-token-localstrage
+  :login-success
   (fn [_ [_ {:keys [token]}]]
+  {:store-token-localstrage token
+   :dispatch [:auth]}))
+
+(re-frame/reg-fx
+  :store-token-localstrage
+  (fn [token]
     (.setItem (.-localStorage js/window) :token token)))
+
+(defn wrap-default-http [info]
+  (merge info {:format          (ajax/json-request-format)
+               :response-format (ajax/json-response-format {:keywords? true})}))
+
+(defn wrap-token-http [info token]
+  (merge info {:headers {:Authorization (str "Bearer " token)}}))
 
 (re-frame/reg-event-fx
   :get-entries
-  (fn [{:keys [db]} _]
-    {:http-xhrio {:method          :get
-                  :uri             "/entries"
-                  :timeout         8000
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:process-entries]
-                  :on-failure      [:process-error]}}))
+  [(re-frame/inject-cofx :token)]
+  (fn [_ _]
+    {:http-xhrio (-> {:method          :get
+                      :uri             "/entries"
+                      :on-success      [:process-entries]
+                      :on-failure      [:process-error]}
+                     wrap-default-http
+                     )}))
 
 (re-frame/reg-event-fx
   :auth
-  [(re-frame/inject-cofx :token)];)]
+  [(re-frame/inject-cofx :token)]
   (fn [{:keys [token]} _]
-    {:http-xhrio {:method          :get
-                  :uri             "/auth"
-                  :headers         {:Authorization (str "Bearer " token)}
-                  :timeout         8000
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:auth-success]
-                  :on-failure      [:auth-error]}}))
+    {:http-xhrio (-> {:method          :get
+                      :uri             "/auth"
+                      :on-success      [:auth-success]
+                      :on-failure      [:auth-error]}
+                     wrap-default-http
+                     (wrap-token-http token))}))
 
 (re-frame/reg-event-fx
   :login
   (fn [{:keys [db]} _]
-    {:http-xhrio {:method          :post
-                  :uri             "/login"
-                  :timeout         8000
-                  :params          {:username "admin" :password "secret"}
-                  :format          (ajax/json-request-format)
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:store-token-localstrage]
-                  :on-failure      [:auth-error]}}))
+    (let [{email :email password :password} (:user-form db)]
+      {:http-xhrio {:method          :post
+                    :uri             "/login"
+                    :params          {:username email :password password}
+                    :format          (ajax/json-request-format)
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [:login-success]
+                    :on-failure      [:sign-error]}})))
 
 (re-frame/reg-event-fx
   :post
   (fn [{:keys [db]} _]
     {:http-xhrio {:method          :post
                   :uri             "/entries"
-                  :timeout         8000
                   :params          (:new-entry db)
                   :format          (ajax/json-request-format)
                   :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:get-entries]
+                  :on-success      [:new-entry-save]
                   :on-failure      [:process-error]}}))
 
 (re-frame/reg-event-fx

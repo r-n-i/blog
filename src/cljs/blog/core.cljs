@@ -21,4 +21,5 @@
   (re-frame/dispatch-sync [:initialize-db])
   (dev-setup)
   (mount-root)
-  (re-frame/dispatch [:get-entries]))
+  (re-frame/dispatch [:get-entries])
+  (re-frame/dispatch [:auth]))

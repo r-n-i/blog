@@ -46,3 +46,18 @@
   :editor-mode
   (fn [db]
     (:editor-mode db)))
+
+(re-frame/reg-sub
+  :user-form
+  (fn [db]
+    (:user-form db)))
+
+(re-frame/reg-sub
+  :sign-error
+  (fn [db]
+    (:sign-error db)))
+
+(re-frame/reg-sub
+  :show-login-modal
+  (fn [db]
+    (:show-login-modal db)))

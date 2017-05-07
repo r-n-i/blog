@@ -15,7 +15,6 @@
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             [blog.core :as blog]))
 
-
 (defn ok [d] {:status 200 :body d})
 (defn bad-request [d] {:status 400 :body d})
 
@@ -32,7 +31,6 @@
     (ok {:status "Logged" :message (str "hello logged user"
                                         (:identity request))})))
 
-
 (def authdata {:admin "secret"
                :test "secret"})
 
@@ -41,6 +39,7 @@
 
 (defn login
   [request]
+  (log/info "--- login ---")
   (log/info request)
   (let [username (get-in request [:params :username])
         password (get-in request [:params :password])
@@ -55,8 +54,7 @@
 
 (defn my-authfn
   [req token]
-  (when-let [user (get @tokens (keyword token))]
-    user))
+  (get @tokens (keyword token)))
 
 (def auth-backend
   (token-backend {:authfn my-authfn :token-name "Bearer"}))

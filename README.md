@@ -8,6 +8,10 @@ You need [leiningen](https://leiningen.org).
 ### Database Migration
 
 ```
+create "blog" database in your mysql server.
+```
+```
+
 lein migratus migrate
 ```
 

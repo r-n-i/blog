@@ -5,13 +5,16 @@ A [re-frame](https://github.com/Day8/re-frame) application designed to ... well,
 
 You need [leiningen](https://leiningen.org).
 
-### Database Migration
+## Database Migration
 
+### Prepare Database
 ```
 create "blog" database in your mysql server.
 ```
-```
 
+### Migration
+create entries table.
+```
 lein migratus migrate
 ```
 

@@ -1,1 +1,1 @@
-DROP TABLE entries;
+DROP TABLE IF EXISTS entries;

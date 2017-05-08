@@ -146,7 +146,7 @@
     (let [{email :email password :password} (:user-form db)]
       {:http-xhrio {:method          :post
                     :uri             "/login"
-                    :params          {:username email :password password}
+                    :params          {:email email :password password}
                     :format          (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [:login-success]

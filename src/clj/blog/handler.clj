@@ -13,59 +13,55 @@
             [buddy.auth :refer [authenticated? throw-unauthorized]]
             [buddy.auth.backends.token :refer [token-backend]]
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
+            [korma.db :refer [defdb mysql]]
+            [korma.core :refer [defentity values where order insert select delete]]
             [blog.core :as blog]))
+
+(defdb db (mysql {:db       "blog"
+                  :user     "root"
+                  :password ""
+                  }))
+
+(defentity entries)
+(defentity users)
 
 (defn ok [d] {:status 200 :body d})
 (defn bad-request [d] {:status 400 :body d})
 
-(defn random-token
-  []
-  (let [randomdata (nonce/random-bytes 16)]
-    (codecs/bytes->hex randomdata)))
+(defn random-token []
+  (codecs/bytes->hex (nonce/random-bytes 16)))
 
-(defn home
-  [request]
+(defn auth [request]
   (log/info request)
   (if-not (authenticated? request)
     (throw-unauthorized)
-    (ok {:status "Logged" :message (str "hello logged user"
-                                        (:identity request))})))
+    (ok {:status "Logged"
+         :message (str "hello logged user" (:identity request))})))
 
-(def authdata {:admin "secret"
-               :test "secret"})
-
-;; Global storage for generated tokens.
 (def tokens (atom {}))
 
-(defn login
-  [request]
+(defn login [{params :params}]
   (log/info "--- login ---")
-  (log/info request)
-  (let [username (get-in request [:params :username])
-        password (get-in request [:params :password])
-        valid? (some-> authdata
-                       (get (keyword username))
-                       (= password))]
-    (if valid?
+  (log/info params)
+    (if
+      (first (select users (where {:email (:email params)
+                                   :encrypted_password (:password params)})))
       (let [token (random-token)]
-        (swap! tokens assoc (keyword token) (keyword username))
+        (swap! tokens assoc (keyword token) (keyword (:email params)))
         (ok {:token token}))
-      (bad-request {:message "wrong auth data"}))))
-
-(defn my-authfn
-  [req token]
-  (get @tokens (keyword token)))
+      (bad-request {:message "wrong auth data"})))
 
 (def auth-backend
-  (token-backend {:authfn my-authfn :token-name "Bearer"}))
+  (token-backend {:authfn (fn [req token] (get @tokens (keyword token)))
+                  :token-name "Bearer"}))
 
 (defroutes routes
   (GET "/" [] (resource-response "index.html" {:root "public"}))
-  (GET "/auth" [] home)
+  (GET "/auth" [] auth)
   (POST "/login" [] login)
-  (GET "/entries" [] (json/write-str (blog/select-entries)))
-  (POST "/entries" req (json/write-str (blog/create-entry (:params req))))
-  (DELETE "/entries" [id] (json/write-str (blog/delete-entry id)))
+  (GET "/entries" [] (json/write-str (select entries (order :id :desc))))
+  (POST "/entries" req (json/write-str (insert entries (values (select-keys req [:title :body])))))
+  (DELETE "/entries" [id] (json/write-str (delete entries (where {:id id}))))
   (resources "/"))
 
 (def dev-handler

@@ -12,7 +12,7 @@
                  [ring/ring-json "0.4.0"]
                  [korma "0.4.0"]
                  [migratus "0.8.13"]
-                 [mysql/mysql-connector-java "5.1.6"]
+                 [mysql/mysql-connector-java "6.0.6"]
                  [buddy "1.3.0"]
                  [markdown-clj "0.9.99"]
                  [ring "1.4.0"]]
@@ -72,7 +72,7 @@
 
   :migratus {:store :database
              :migration-dir "migrations"
-             :db {:classname "com.mysql.jdbc.Driver"
+             :db {:classname "com.mysql.cj.jdbc.Driver"
                   :subprotocol "mysql"
                   :subname "//localhost/blog"
                   :user "root"

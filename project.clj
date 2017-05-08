@@ -10,15 +10,15 @@
                  [compojure "1.5.0"]
                  [yogthos/config "0.8"]
                  [ring/ring-json "0.4.0"]
-                 [mysql/mysql-connector-java "5.1.6"]
                  [korma "0.4.0"]
-                 [migratus "0.9.0"]
+                 [migratus "0.8.13"]
+                 [mysql/mysql-connector-java "5.1.6"]
                  [buddy "1.3.0"]
                  [markdown-clj "0.9.99"]
                  [ring "1.4.0"]]
 
   :plugins [[lein-cljsbuild "1.1.4"]
-            [migratus-lein "0.4.4"]]
+            [migratus-lein "0.4.7"]]
 
   :min-lein-version "2.5.3"
 

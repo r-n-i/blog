@@ -75,6 +75,6 @@
              :db {:classname "com.mysql.cj.jdbc.Driver"
                   :subprotocol "mysql"
                   :subname "//localhost/blog"
-                  :user "root"
+                  :user "blog"
                   :password ""}}
   )

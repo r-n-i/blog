@@ -3,7 +3,7 @@
            [korma.core :refer [defentity values where order insert select delete]]))
 
 (defdb db (mysql {:db "blog"
-                 :user "root"
+                 :user "blog"
                  :password ""
                  }))
 

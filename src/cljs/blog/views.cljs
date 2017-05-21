@@ -164,7 +164,7 @@
          [:li
           {
            :on-click #(re-frame/dispatch [:focus entry-])
-           :style {:color (if (and (= mode :read) (= entry- focus)) :purple :gray)}
+           :style {:color (if (and (= mode :read) (= entry- focus)) "#bf4a8e" :gray)}
            }
           (:title entry-)])]
       )))
@@ -239,8 +239,10 @@
                                :min-width "100px"
                                :max-width "100px"]]]
                   [re-com/line
+                   :class "line"
                    :size  "3px"
-                   :color "red"]
+                   :color "#bf4a8e"
+                   ]
                   [re-com/alert-box
                    :heading error
                    :style {:display (if error :inherit :none)}]

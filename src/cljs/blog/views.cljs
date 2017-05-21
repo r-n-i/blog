@@ -29,40 +29,40 @@
           auth       @(re-frame/subscribe [:auth])
           sign-error (re-frame/subscribe [:sign-error])]
       (modal-dialog-panel [
-                     [re-com/title :label "Profile" :level :level2]
-                     [re-com/title :label @sign-error :level :level3 :style {:color :red}]
-                     [re-com/v-box
-                      :class    "form-group"
-                      :children [[:label {:for "pf-email"} "Email address"]
-                                 [re-com/input-text
-                                  :model       (or (:email @user-form) "")
-                                  :on-change   #(re-frame/dispatch [:on-change-email %])
-                                  :placeholder "Enter email"
-                                  :class       "form-control"
-                                  :attr        {:id "pf-email"}]]]
-                     [re-com/v-box
-                      :class    "form-group"
-                      :children [[:label {:for "pf-password"} "Password"]
-                                 [re-com/input-text
-                                  :model       (or (:password @user-form) "")
-                                  :on-change   #(re-frame/dispatch [:on-change-password %])
-                                  :placeholder "Enter password"
-                                  :class       "form-control"
-                                  :attr        {:id "pf-password" :type "password"}]]]
-                     [re-com/line :color "#ddd" :style {:margin "10px 0 10px"}]
-                     [re-com/h-box
-                      :gap      "12px"
-                      :children [(if-not auth [re-com/button
-                                  :label    "Sign in"
-                                  :class    "btn-primary"
-                                  :on-click #(re-frame/dispatch [:login])])
-                                 (if auth [re-com/button
-                                  :label    "Create user"
-                                  :class    "btn-primary"
-                                  :on-click #(re-frame/dispatch [:create-user])])
-                                 [re-com/button
-                                  :label    "Cancel"
-                                  :on-click #(re-frame/dispatch [:hide-login-modal])]]]]))))
+                           [re-com/title :label "Profile" :level :level2]
+                           [re-com/title :label @sign-error :level :level3 :style {:color :red}]
+                           [re-com/v-box
+                            :class    "form-group"
+                            :children [[:label {:for "pf-email"} "Email address"]
+                                       [re-com/input-text
+                                        :model       (or (:email @user-form) "")
+                                        :on-change   #(re-frame/dispatch [:on-change-email %])
+                                        :placeholder "Enter email"
+                                        :class       "form-control"
+                                        :attr        {:id "pf-email"}]]]
+                           [re-com/v-box
+                            :class    "form-group"
+                            :children [[:label {:for "pf-password"} "Password"]
+                                       [re-com/input-text
+                                        :model       (or (:password @user-form) "")
+                                        :on-change   #(re-frame/dispatch [:on-change-password %])
+                                        :placeholder "Enter password"
+                                        :class       "form-control"
+                                        :attr        {:id "pf-password" :type "password"}]]]
+                           [re-com/line :color "#ddd" :style {:margin "10px 0 10px"}]
+                           [re-com/h-box
+                            :gap      "12px"
+                            :children [(if-not auth [re-com/button
+                                                     :label    "Sign in"
+                                                     :class    "btn-primary"
+                                                     :on-click #(re-frame/dispatch [:login])])
+                                       (if auth [re-com/button
+                                                 :label    "Create user"
+                                                 :class    "btn-primary"
+                                                 :on-click #(re-frame/dispatch [:create-user])])
+                                       [re-com/button
+                                        :label    "Cancel"
+                                        :on-click #(re-frame/dispatch [:hide-login-modal])]]]]))))
 
 (defn inputs []
   (fn []
@@ -72,12 +72,14 @@
        :gap      "10px"
        :children [
                   [re-com/input-text
+                   :width "500px"
                    :model (or (:title new-entry) "")
                    :on-change #(re-frame/dispatch [:on-change-title %])
                    :change-on-blur? false
                    :placeholder "new entry"
                    ]
                   [re-com/input-textarea
+                   :width "500px"
                    :model (or (:body new-entry) "")
                    :on-change #(re-frame/dispatch [:on-change-body %])
                    :change-on-blur? false
@@ -100,9 +102,9 @@
 
 (defn input-preview []
   (fn []
-    [re-com/h-split
-     :panel-1 [inputs]
-     :panel-2 [preview]]))
+    [re-com/h-box
+     :gap "10px"
+     :children[[inputs][preview]]]))
 
 (defn editor []
   (fn []
@@ -113,6 +115,7 @@
                                      {:id :both :label "both"}])]
       [re-com/v-box
        :height   "auto"
+       :width    "500px"
        :gap      "10px"
        :children [
                   [re-com/horizontal-tabs
@@ -137,14 +140,19 @@
         :label (:title focus)
         :level :level1]
        (react-raw (markdown/md->html (:body focus)))
-       [re-com/label
-        :label (:updated_at focus)
-        ]
-       (if (and auth (:title focus)) [re-com/button
-        :label "delete"
-        :on-click #(re-frame/dispatch [:delete])
-        ] "")
-       ])))
+       [re-com/h-box
+        :size "none"
+        :gap "10px"
+        :children [
+                   [re-com/label
+                    :label (:updated_at focus)
+                    ]
+                   (if (and auth (:title focus)) [re-com/md-icon-button
+                                                  :md-icon-name "zmdi-delete"
+                                                  :size :smaller
+                                                  :on-click #(re-frame/dispatch [:delete])
+                                                  ] "")
+                   ]]])))
 
 (defn entries []
   (fn []
@@ -176,24 +184,24 @@
                    :child [(if (= mode :read) entry editor)]
                    :size "auto"
                    :min-width "100px"
-                   :max-width "200px"]
+                   :max-width "600px"]
                   ]])))
 
 (defn new-entry-button []
   (fn []
-    [re-com/button
+    [re-com/hyperlink
      :label "new entry"
      :on-click #(re-frame/dispatch [:new-entry])]))
 
 (defn login-button []
   (fn []
-    [re-com/button
+    [re-com/hyperlink
      :label "login"
      :on-click #(re-frame/dispatch [:show-login-modal])]))
 
 (defn setting-button []
   (fn []
-    [re-com/button
+    [re-com/hyperlink
      :label "setting"
      :on-click #(re-frame/dispatch [:show-login-modal])]))
 

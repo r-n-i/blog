@@ -174,14 +174,15 @@
 
 (re-frame/reg-event-fx
   :post
-  (fn [{:keys [db]} _]
-    {:http-xhrio {:method          :post
-                  :uri             "/entries"
-                  :params          (:new-entry db)
-                  :format          (ajax/json-request-format)
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:new-entry-save]
-                  :on-failure      [:process-error]}}))
+  [(re-frame/inject-cofx :token)]
+  (fn [{:keys [db token]} _]
+    {:http-xhrio (-> {:method          :post
+                      :uri             "/entries"
+                      :params          (:new-entry db)
+                      :on-success      [:new-entry-save]
+                      :on-failure      [:process-error]}
+                     wrap-default-http
+                     (wrap-token-http token))}))
 
 (re-frame/reg-event-fx
   :delete

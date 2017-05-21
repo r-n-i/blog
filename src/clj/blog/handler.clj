@@ -20,6 +20,11 @@
             [clj-time.coerce :refer [to-sql-time]]
             [blog.core :as blog]))
 
+(extend-type java.sql.Timestamp
+    json/JSONWriter
+    (-write [date out]
+        (json/-write (str date) out)))
+
 (defdb db (mysql {:db       "blog"
                   :user     "root"
                   :password ""
@@ -43,30 +48,32 @@
 
 (def tokens (atom {}))
 
+(defn matched-user [email password]
+  (when-let [user (-> (select* users)
+                      (where {:email email})
+                      select
+                      first)]
+    (if (check password (:encrypted_password user))
+      user
+      nil)))
+
 (defn password-matches?
-    "Check to see if the password given matches the digest of the user's saved password"
-    [email password]
-    (some-> (select* users)
-                       ; (fields :password_digest)
-                        (where {:email email})
-                        select
-                        first
-                        :encrypted_password
-                        (->> (check password))))
+  [email password]
+  (some-> (select* users)
+          (where {:email email})
+          select
+          first
+          :encrypted_password
+          (->> (check password))))
 
 (defn login [{{email :email password :password} :params}]
-  (log/info "--- login ---")
-  (log/info email)
-  (log/info password)
-    (if (or (password-matches? email password) (and (= email "admin") (= password "secret")))
-      (let [token (random-token)]
-        (swap! tokens assoc (keyword token) {:email email :level :admin})
-        (ok {:token token}))
-      (bad-request {:message "wrong auth data"})))
+  (if-let [user (matched-user email password)]
+    (let [token (random-token)]
+      (swap! tokens assoc (keyword token) (select-keys user [:email :id :level]))
+      (ok {:token token}))
+    (bad-request {:message "wrong auth data"})))
 
 (defn create-user [{{email :email password :password} :params :as request}]
-  (log/info "--- create-user ---")
-  (log/info request)
   (if-not (authenticated? request)
     (throw-unauthorized)
     (if-not (= :admin (:level (:identity request)))
@@ -77,6 +84,18 @@
                                :created_at (to-sql-time (now))
                                :updated_at (to-sql-time (now))}))
         {:status 200 :body {:message "ok"}}))))
+
+(defn create-entry
+  [{{:keys [title body]} :params :as req}]
+  (if-not (authenticated? req)
+    (throw-unauthorized)
+    (do
+      (insert entries (values {:user_id (:id (:identity req))
+                               :title title
+                             :body body
+                             :created_at (to-sql-time (now))
+                             :updated_at (to-sql-time (now))}))
+      {:status 200 :body {:message "ok"}})))
 
 (defn reset-password [{{email :email} :identity {password :password} :params}]
   (update users (set-fields {:encrypted_password (encrypt password)}) (where {:email email})))
@@ -92,7 +111,7 @@
   (PUT "/password" [] reset-password)
   (POST "/users" [] create-user)
   (GET "/entries" [] (json/write-str (select entries (order :id :desc))))
-  (POST "/entries" req (json/write-str (insert entries (values (select-keys req [:title :body])))))
+  (POST "/entries" [] create-entry)
   (DELETE "/entries" [id] (json/write-str (delete entries (where {:id id}))))
   (resources "/"))
 

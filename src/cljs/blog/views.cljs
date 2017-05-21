@@ -130,16 +130,20 @@
 
 (defn entry []
   (fn []
-    (let [focus @(re-frame/subscribe [:focused])]
+    (let [focus @(re-frame/subscribe [:focused])
+          auth  @(re-frame/subscribe [:auth])]
       [:div
        [re-com/title
         :label (:title focus)
         :level :level1]
        (react-raw (markdown/md->html (:body focus)))
-       [re-com/button
+       [re-com/label
+        :label (:updated_at focus)
+        ]
+       (if (and auth (:title focus)) [re-com/button
         :label "delete"
         :on-click #(re-frame/dispatch [:delete])
-        ]
+        ] "")
        ])))
 
 (defn entries []

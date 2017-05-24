@@ -71,10 +71,10 @@
   :prep-tasks [["cljsbuild" "once" "min"] "compile"]
 
   :migratus {:store :database
-             :migration-dir "migrations"
-             :db {:classname "com.mysql.cj.jdbc.Driver"
+             :migration-dir    "migrations"
+             :db {:classname   "com.mysql.cj.jdbc.Driver"
                   :subprotocol "mysql"
-                  :subname "//localhost/blog"
-                  :user "blog"
-                  :password ""}}
+                  :subname     "//localhost/blog"
+                  :user        "blog"
+                  :password    ""}}
   )

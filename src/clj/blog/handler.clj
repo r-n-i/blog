@@ -25,9 +25,10 @@
     (-write [date out]
         (json/-write (str date) out)))
 
-(defdb db (mysql {:db       "blog"
-                  :user     "blog"
-                  :password ""
+(defdb db (mysql {:classname "com.mysql.cj.jdbc.Driver"
+                  :db        "blog"
+                  :user      "blog"
+                  :password  ""
                   }))
 
 (defentity entries)

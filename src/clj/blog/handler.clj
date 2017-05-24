@@ -26,7 +26,7 @@
         (json/-write (str date) out)))
 
 (defdb db (mysql {:db       "blog"
-                  :user     "root"
+                  :user     "blog"
                   :password ""
                   }))
 

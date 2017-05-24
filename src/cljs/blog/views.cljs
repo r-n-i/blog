@@ -128,6 +128,7 @@
                     :both    [input-preview])
                   [re-com/button
                    :label "save"
+                   :style {:color "#3166cc"}
                    :on-click #(re-frame/dispatch [:post])
                    ]]])))
 

@@ -103,8 +103,15 @@
 (re-frame/reg-event-fx
   :login-success
   (fn [_ [_ {:keys [token]}]]
-  {:store-token-localstrage token
-   :dispatch [:auth]}))
+    {:store-token-localstrage token
+     :dispatch [:auth]}))
+
+(re-frame/reg-event-db
+  :user-create-success
+  (fn [db [_ res]]
+    (-> db
+        (assoc-in [:user-form] nil)
+        (assoc-in [:show-login-modal] false))))
 
 (re-frame/reg-fx
   :store-token-localstrage
@@ -146,22 +153,36 @@
     (let [{email :email password :password} (:user-form db)]
       {:http-xhrio {:method          :post
                     :uri             "/login"
-                    :params          {:username email :password password}
+                    :params          {:email email :password password}
                     :format          (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [:login-success]
                     :on-failure      [:sign-error]}})))
 
 (re-frame/reg-event-fx
+  :create-user
+  [(re-frame/inject-cofx :token)]
+  (fn [{:keys [db token]} _]
+    (let [{email :email password :password} (:user-form db)]
+      {:http-xhrio (-> {:method          :post
+                        :uri             "/users"
+                        :params          {:email email :password password}
+                        :on-success      [:user-create-success]
+                        :on-failure      [:sign-error]}
+                       wrap-default-http
+                       (wrap-token-http token))})))
+
+(re-frame/reg-event-fx
   :post
-  (fn [{:keys [db]} _]
-    {:http-xhrio {:method          :post
-                  :uri             "/entries"
-                  :params          (:new-entry db)
-                  :format          (ajax/json-request-format)
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:new-entry-save]
-                  :on-failure      [:process-error]}}))
+  [(re-frame/inject-cofx :token)]
+  (fn [{:keys [db token]} _]
+    {:http-xhrio (-> {:method          :post
+                      :uri             "/entries"
+                      :params          (:new-entry db)
+                      :on-success      [:new-entry-save]
+                      :on-failure      [:process-error]}
+                     wrap-default-http
+                     (wrap-token-http token))}))
 
 (re-frame/reg-event-fx
   :delete

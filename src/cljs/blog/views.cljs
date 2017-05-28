@@ -1,6 +1,5 @@
 (ns blog.views
   (:require [re-frame.core :as re-frame]
-            [re-com.core :as re-com]
             [reagent.core :as reagent]
             [markdown.core :as markdown]))
 
@@ -10,242 +9,167 @@
         (clj->js {:key (str (hash raw-html-str))
                   :dangerouslySetInnerHTML {:__html raw-html-str}})))
 
-(defn modal-dialog-panel [children]
-  [re-com/modal-panel
-   :backdrop-color   "grey"
-   :backdrop-opacity 0.4
-   :style            {:font-family "Consolas"}
-   :child
-   [re-com/border
-    :border "1px solid #eee"
-    :child  [re-com/v-box
-             :padding  "10px"
-             :style    {:background-color "cornsilk"}
-             :children children]]])
-
-(defn modal-dialog []
+(defn modal []
   (fn []
     (let [user-form (re-frame/subscribe [:user-form])
           auth       @(re-frame/subscribe [:auth])
           sign-error (re-frame/subscribe [:sign-error])]
-      (modal-dialog-panel [
-                           [re-com/title :label "Profile" :level :level2]
-                           [re-com/title :label @sign-error :level :level3 :style {:color :red}]
-                           [re-com/v-box
-                            :class    "form-group"
-                            :children [[:label {:for "pf-email"} "Email address"]
-                                       [re-com/input-text
-                                        :model       (or (:email @user-form) "")
-                                        :on-change   #(re-frame/dispatch [:on-change-email %])
-                                        :placeholder "Enter email"
-                                        :class       "form-control"
-                                        :attr        {:id "pf-email"}]]]
-                           [re-com/v-box
-                            :class    "form-group"
-                            :children [[:label {:for "pf-password"} "Password"]
-                                       [re-com/input-text
-                                        :model       (or (:password @user-form) "")
-                                        :on-change   #(re-frame/dispatch [:on-change-password %])
-                                        :placeholder "Enter password"
-                                        :class       "form-control"
-                                        :attr        {:id "pf-password" :type "password"}]]]
-                           [re-com/line :color "#ddd" :style {:margin "10px 0 10px"}]
-                           [re-com/h-box
-                            :gap      "12px"
-                            :children [(if-not auth [re-com/button
-                                                     :label    "Sign in"
-                                                     :class    "btn-primary"
-                                                     :on-click #(re-frame/dispatch [:login])])
-                                       (if auth [re-com/button
-                                                 :label    "Create user"
-                                                 :class    "btn-primary"
-                                                 :on-click #(re-frame/dispatch [:create-user])])
-                                       [re-com/button
-                                        :label    "Cancel"
-                                        :on-click #(re-frame/dispatch [:hide-login-modal])]]]]))))
+    [:div.modal.is-active
+     [:div.modal-background]
+     [:div.modal-content
+      [:section.section
+          [:h2.title {:style {:font-weight :bold}} (if auth "Setting" "Login")]
+          [:p.subtitle {:style {:color :red}} @sign-error]
+          [:p.subtitle "Email"]
+          [:div.field
+           [:p.control
+            [:input.input {:value (:email @user-form)
+                           :on-change #(re-frame/dispatch [:on-change-email (-> % .-target .-value)])}]]]
+          [:p.subtitle "Password"]
+          [:div.field
+           [:p.control
+            [:input.input {:value (:password @user-form)
+                           :on-change #(re-frame/dispatch [:on-change-password (-> % .-target .-value)])}]]]
+         [:span
+          [:a.button.is-primary.is-outlined
+          {:on-click #(re-frame/dispatch [(if auth :create-user :login)])}
+          (if auth "create user" "login")]
+         (when auth [:a.button.is-primary.is-outlined
+          {:on-click #(re-frame/dispatch [:update-user])
+           :style {:margin-left "10px"}}
+          "update"])]
+         ]]
+
+     [:button.modal-close {:on-click #(re-frame/dispatch [:hide-login-modal])}]]))
+  )
 
 (defn inputs []
   (fn []
     (let [new-entry @(re-frame/subscribe [:new-entry])]
-      [re-com/v-box
-       :height   "auto"
-       :gap      "10px"
-       :children [
-                  [re-com/input-text
-                   :width "500px"
-                   :model (or (:title new-entry) "")
-                   :on-change #(re-frame/dispatch [:on-change-title %])
-                   :change-on-blur? false
-                   :placeholder "new entry"
-                   ]
-                  [re-com/input-textarea
-                   :width "500px"
-                   :model (or (:body new-entry) "")
-                   :on-change #(re-frame/dispatch [:on-change-body %])
-                   :change-on-blur? false
-                   :placeholder "body"
-                   ]]])))
+      [:div.container
+       [:div.field
+        [:p.control
+         [:input.input {:value (:title new-entry)
+                        :placeholder "Title"
+                        :on-change #(re-frame/dispatch [:on-change-title (-> % .-target .-value)])}]]]
+       [:div.field
+        [:p.control
+         [:textarea.textarea {:value (:body new-entry)
+                              :placeholder "Body"
+                              :on-change #(re-frame/dispatch [:on-change-body (-> % .-target .-value)])     }]]]])))
 
 (defn preview []
   (fn []
     (let [new-entry @(re-frame/subscribe [:new-entry])]
-      [re-com/v-box
-       :height   "auto"
-       :gap      "10px"
-       :children [
-                  [re-com/title
-                   :label (:title new-entry)
-                   :level :level1]
-                  (react-raw (markdown/md->html (:body new-entry)))
-                  ]
+      [:div.container
+       [:p.title (:title new-entry)]
+       [:div.content
+        (react-raw (markdown/md->html (:body new-entry)))
+        ]
        ])))
 
 (defn input-preview []
   (fn []
-    [re-com/h-box
-     :gap "10px"
-     :children[[inputs][preview]]]))
+    [:div.tile.is-ancestor
+     [:div.tile.is-half
+      [inputs]]
+     [:div.tile.is-half
+      [preview]]]))
 
 (defn editor []
   (fn []
     (let [new-entry   @(re-frame/subscribe [:new-entry])
-          editor-mode (re-frame/subscribe [:editor-mode])
-          tab-defs    (reagent/atom [{:id :input :label "edit"}
-                                     {:id :preview :label "preview"}
-                                     {:id :both :label "both"}])]
-      [re-com/v-box
-       :height   "auto"
-       :width    "500px"
-       :gap      "10px"
-       :children [
-                  [re-com/horizontal-tabs
-                   :model     editor-mode
-                   :tabs      tab-defs
-                   :on-change #(re-frame/dispatch [:switch-editor-mode %])]
-                  (case @editor-mode
-                    :input   [inputs]
-                    :preview [preview]
-                    :both    [input-preview])
-                  [re-com/button
-                   :label "save"
-                   :style {:color "#3166cc"}
-                   :on-click #(re-frame/dispatch [:post])
-                   ]]])))
+          editor-mode (re-frame/subscribe [:editor-mode])]
+      [:section.section
+       [:div.container
+        [:div.column.is-8
+         [:h2.title {:style {:font-weight :bold}} "New Entry"]
+         ]
+        [:div.column.is-12
+         [:div.tabs
+          [:ul
+           [(if (= @editor-mode :input) :li.is-active :li)
+            [:a {:on-click #(re-frame/dispatch [:switch-editor-mode :input])} "input"]]
+           [(if (= @editor-mode :preview) :li.is-active :li)
+            [:a {:on-click #(re-frame/dispatch [:switch-editor-mode :preview])} "preview"]]
+           [(if (= @editor-mode :both) :li.is-active :li)
+            [:a {:on-click #(re-frame/dispatch [:switch-editor-mode :both])} "both"]]
+           ]]
+         ]
+        [:div.column.is-12
+         (case @editor-mode
+           :input   [inputs]
+           :preview [preview]
+           :both    [input-preview])
+         ]
+        [:div.column.is-2
+         [:a.button.is-primary.is-outlined
+          {:on-click #(re-frame/dispatch [:post])}
+          "save"]
+         ]
+        ]])))
 
-(defn entry []
+(defn entry [{:keys [title body updated_at]}]
   (fn []
-    (let [focus @(re-frame/subscribe [:focused])
-          auth  @(re-frame/subscribe [:auth])]
-      [:div
-       [re-com/title
-        :label (:title focus)
-        :level :level1]
-       (react-raw (markdown/md->html (:body focus)))
-       [re-com/h-box
-        :size "none"
-        :gap "10px"
-        :children [
-                   [re-com/label
-                    :label (:updated_at focus)
-                    ]
-                   (if (and auth (:title focus)) [re-com/md-icon-button
-                                                  :md-icon-name "zmdi-delete"
-                                                  :size :smaller
-                                                  :on-click #(re-frame/dispatch [:delete])
-                                                  ] "")
-                   ]]])))
+    (let [auth @(re-frame/subscribe [:auth])]
+      [:section.section
+       [:div.container
+        [:div.columns
+         [:div.column.is-4
+          [:p.subtitle (str updated_at "  ") (when auth [:a "delete"])]
+          [:h2.title {:style {:font-weight :bold}} title]]
+         [:div.column.is-8
+          [:div.content (react-raw (markdown/md->html body))]
+          ]]]])))
 
 (defn entries []
   (fn []
-    (let [entries @(re-frame/subscribe [:entries])
-          focus   @(re-frame/subscribe [:focused])
-          mode    @(re-frame/subscribe [:mode])]
-      [:ul
+    (let [entries @(re-frame/subscribe [:entries])]
+      [:div
        (for [entry- entries] ^{:key entry-}
-         [:li
-          {
-           :on-click #(re-frame/dispatch [:focus entry-])
-           :style {:color (if (and (= mode :read) (= entry- focus)) "#bf4a8e" :gray)}
-           }
-          (:title entry-)])]
-      )))
+         [entry entry-])])))
 
-(defn panel []
+(defn nav []
   (fn []
-    (let [mode @(re-frame/subscribe [:mode])]
-      [re-com/h-box
-       :size "none"
-       :children [
-                  [re-com/box
-                   :child [entries]
-                   :size "auto"
-                   :min-width "100px"
-                   :max-width "200px"]
-                  [re-com/box
-                   :child [(if (= mode :read) entry editor)]
-                   :size "auto"
-                   :min-width "100px"
-                   :max-width "600px"]
-                  ]])))
+    (let [show-menu @(re-frame/subscribe [:show-menu])
+          auth @(re-frame/subscribe [:auth])]
+      [:div.nav
+       [:div.nav-left
+        [:a.nav-item.is-brand "Blog"]]
+       [:div.nav-center]
+       [:span.nav-toggle
+        {:on-click #(re-frame/dispatch [:toggle-menu])
+         :class (if show-menu :is-active "")}
+        [:span]
+        [:span]
+        [:span]]
+       [:div.nav-right.nav-menu
+        {:class (if show-menu :is-active "")}
+        [:a.nav-item {:on-click #(re-frame/dispatch [:show-login-modal])} (if auth "setting" "login")]
+        (when auth [:a.nav-item {:on-click #(re-frame/dispatch [:new-entry])} "new entry"])
+        ]])))
 
-(defn new-entry-button []
+(defn header []
   (fn []
-    [re-com/hyperlink
-     :label "new entry"
-     :on-click #(re-frame/dispatch [:new-entry])]))
-
-(defn login-button []
-  (fn []
-    [re-com/hyperlink
-     :label "login"
-     :on-click #(re-frame/dispatch [:show-login-modal])]))
-
-(defn setting-button []
-  (fn []
-    [re-com/hyperlink
-     :label "setting"
-     :on-click #(re-frame/dispatch [:show-login-modal])]))
+    [:section.hero.is-primary {:style {:color :pink}}
+     [:div.hero-body
+      [:div.container
+       [:div.columns.is-vcentered
+        [:div.column
+         [:h1.title "Blog"]
+         [:p.subtitle "This is blog."]]]]]]))
 
 (defn main-panel []
   (fn []
     (let [error            @(re-frame/subscribe [:error])
-          auth             @(re-frame/subscribe [:auth])
+          mode             @(re-frame/subscribe [:mode])
           show-login-modal @(re-frame/subscribe [:show-login-modal])]
-      [re-com/v-box
-       :gap      "10px"
-       :children [
-                  [re-com/h-box
-                   :align :baseline
-                   :children [
-                              [re-com/box
-                               :child [re-com/title
-                                       :label "Blog"
-                                       :level :level1]
-                               :min-width "100px"
-                               :max-width "200px"]
-                              [re-com/box
-                               :child ""
-                               :size "auto"
-                               ]
-                              [re-com/box
-                               :child (if auth [setting-button] "")
-                               :align-self :stretch
-                               :align :end
-                               :min-width "100px"
-                               :max-width "100px"]
-                              [re-com/box
-                               :child (if auth [new-entry-button] [login-button])
-                               :align-self :stretch
-                               :align :end
-                               :min-width "100px"
-                               :max-width "100px"]]]
-                  [re-com/line
-                   :class "line"
-                   :size  "3px"
-                   :color "#bf4a8e"
-                   ]
-                  [re-com/alert-box
-                   :heading error
-                   :style {:display (if error :inherit :none)}]
-                  [panel]
-                  (when show-login-modal [modal-dialog])]])))
+      [:div
+       [nav]
+       [header]
+       (when error [:div.notification.is-warning error])
+       (when (= mode :edit) [editor])
+       [entries]
+       (when show-login-modal [modal])
+       ]
+      )))

@@ -30,7 +30,9 @@
 (re-frame/reg-event-db
   :new-entry
   (fn  [db _]
-    (assoc-in db [:mode] :edit)))
+    (-> db
+        (assoc-in [:mode] :edit)
+        (assoc-in [:show-menu] false))))
 
 (re-frame/reg-event-db
   :on-change-title
@@ -51,6 +53,11 @@
   :on-change-password
   (fn  [db [_ password]]
     (assoc-in db [:user-form :password] password)))
+
+(re-frame/reg-event-db
+  :toggle-menu
+  (fn  [db [_ _]]
+    (update-in db [:show-menu] not)))
 
 (re-frame/reg-event-fx
   :new-entry-save

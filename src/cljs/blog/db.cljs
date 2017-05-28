@@ -10,4 +10,5 @@
    :error nil
    :sign-error nil
    :user-form {:email nil :password nil}
+   :show-menu false
    })

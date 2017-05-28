@@ -61,3 +61,8 @@
   :show-login-modal
   (fn [db]
     (:show-login-modal db)))
+
+(re-frame/reg-sub
+  :show-menu
+  (fn [db]
+    (:show-menu db)))

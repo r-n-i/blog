@@ -6,7 +6,6 @@
                  [day8.re-frame/http-fx "0.1.2"]
                  [cljs-ajax "0.5.9"]
                  [org.clojure/core.async "0.2.391"]
-                 [re-com "2.0.0"]
                  [compojure "1.5.0"]
                  [yogthos/config "0.8"]
                  [ring/ring-json "0.4.0"]

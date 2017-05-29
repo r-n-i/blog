@@ -21,9 +21,9 @@
             [blog.core :as blog]))
 
 (extend-type java.sql.Timestamp
-    json/JSONWriter
-    (-write [date out]
-        (json/-write (str date) out)))
+  json/JSONWriter
+  (-write [date out]
+    (json/-write (str date) out)))
 
 (defdb db (mysql {:classname "com.mysql.cj.jdbc.Driver"
                   :db        "blog"
@@ -74,6 +74,24 @@
       (ok {:token token}))
     (bad-request {:message "wrong auth data"})))
 
+(defn encrypted-params [{password :password :as params}]
+  (if password
+    (-> params (dissoc :password) (assoc :encrypted_password (encrypt password)))
+    params))
+
+(defn update-user [{{id :id} :identity params :params}]
+  (if-not (authenticated? request)
+    (throw-unauthorized)
+    (do
+      (update
+        users
+        (set-fields (-> params
+                        (select-keys [:email :password])
+                        encrypted-params
+                        (assoc :updated_at (to-sql-time (now)))))
+        (where {:id id}))
+      {:status 200 :body {:message "ok"}})))
+
 (defn create-user [{{email :email password :password} :params :as request}]
   (if-not (authenticated? request)
     (throw-unauthorized)
@@ -93,13 +111,10 @@
     (do
       (insert entries (values {:user_id (:id (:identity req))
                                :title title
-                             :body body
-                             :created_at (to-sql-time (now))
-                             :updated_at (to-sql-time (now))}))
+                               :body body
+                               :created_at (to-sql-time (now))
+                               :updated_at (to-sql-time (now))}))
       {:status 200 :body {:message "ok"}})))
-
-(defn reset-password [{{email :email} :identity {password :password} :params}]
-  (update users (set-fields {:encrypted_password (encrypt password)}) (where {:email email})))
 
 (def auth-backend
   (token-backend {:authfn (fn [req token] (get @tokens (keyword token)))
@@ -109,8 +124,8 @@
   (GET "/" [] (resource-response "index.html" {:root "public"}))
   (GET "/auth" [] auth)
   (POST "/login" [] login)
-  (PUT "/password" [] reset-password)
   (POST "/users" [] create-user)
+  (PUT "/users" [] update-user)
   (GET "/entries" [] (json/write-str (select entries (order :id :desc))))
   (POST "/entries" [] create-entry)
   (DELETE "/entries" [id] (json/write-str (delete entries (where {:id id}))))

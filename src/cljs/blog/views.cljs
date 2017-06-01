@@ -70,10 +70,11 @@
 
 (defn input-preview []
   (fn []
-    [:div.tile.is-ancestor
-     [:div.tile.is-half
+    [:div.tile
+     [:div.tile.is-5
       [inputs]]
-     [:div.tile.is-half
+     [:div.tile.is-1]
+     [:div.tile.is-5
       [preview]]]))
 
 (defn editor []

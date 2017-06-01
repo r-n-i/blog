@@ -79,7 +79,7 @@
     (-> params (dissoc :password) (assoc :encrypted_password (encrypt password)))
     params))
 
-(defn update-user [{{id :id} :identity params :params}]
+(defn update-user [{{id :id} :identity params :params :as request}]
   (if-not (authenticated? request)
     (throw-unauthorized)
     (do
@@ -125,7 +125,7 @@
   (GET "/auth" [] auth)
   (POST "/login" [] login)
   (POST "/users" [] create-user)
-  (PUT "/users" [] update-user)
+  (PUT "/user" [] update-user)
   (GET "/entries" [] (json/write-str (select entries (order :id :desc))))
   (POST "/entries" [] create-entry)
   (DELETE "/entries" [id] (json/write-str (delete entries (where {:id id}))))

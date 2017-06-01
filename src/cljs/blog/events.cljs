@@ -120,6 +120,13 @@
         (assoc-in [:user-form] nil)
         (assoc-in [:show-login-modal] false))))
 
+(re-frame/reg-event-db
+  :user-update-success
+  (fn [db [_ res]]
+    (-> db
+        (assoc-in [:user-form] nil)
+        (assoc-in [:show-login-modal] false))))
+
 (re-frame/reg-fx
   :store-token-localstrage
   (fn [token]
@@ -175,6 +182,19 @@
                         :uri             "/users"
                         :params          {:email email :password password}
                         :on-success      [:user-create-success]
+                        :on-failure      [:sign-error]}
+                       wrap-default-http
+                       (wrap-token-http token))})))
+
+(re-frame/reg-event-fx
+  :update-user
+  [(re-frame/inject-cofx :token)]
+  (fn [{:keys [db token]} _]
+    (let [{email :email password :password} (:user-form db)]
+      {:http-xhrio (-> {:method          :put
+                        :uri             "/user"
+                        :params          {:email email :password password}
+                        :on-success      [:user-update-success]
                         :on-failure      [:sign-error]}
                        wrap-default-http
                        (wrap-token-http token))})))

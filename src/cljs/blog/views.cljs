@@ -137,7 +137,7 @@
           auth @(re-frame/subscribe [:auth])]
       [:div.nav
        [:div.nav-left
-        [:a.nav-item.is-brand "Blog"]]
+        [:a.nav-item.is-brand "RNI Developer's Blog"]]
        [:div.nav-center]
        [:span.nav-toggle
         {:on-click #(re-frame/dispatch [:toggle-menu])
@@ -158,8 +158,8 @@
       [:div.container
        [:div.columns.is-vcentered
         [:div.column
-         [:h1.title "Blog"]
-         [:p.subtitle "This is blog."]]]]]]))
+         [:h1.title "RNI Developer's Blog"]
+         [:p.subtitle "株式会社リサーチ・アンド・イノベーションの開発者ブログです"]]]]]]))
 
 (defn main-panel []
   (fn []

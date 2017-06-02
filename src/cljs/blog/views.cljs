@@ -28,7 +28,8 @@
           [:p.subtitle "Password"]
           [:div.field
            [:p.control
-            [:input.input {:value (:password @user-form)
+            [:input.input {:type :password
+                           :value (:password @user-form)
                            :on-change #(re-frame/dispatch [:on-change-password (-> % .-target .-value)])}]]]
          [:span
           [:a.button.is-primary.is-outlined

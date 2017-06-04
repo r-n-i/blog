@@ -38,11 +38,6 @@
     (:auth db)))
 
 (re-frame/reg-sub
-  :new-entry-title
-  (fn [db]
-    (:title (:new-entry db))))
-
-(re-frame/reg-sub
   :editor-mode
   (fn [db]
     (:editor-mode db)))

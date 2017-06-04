@@ -85,7 +85,7 @@
       [:section.section
        [:div.container
         [:div.column.is-8
-         [:h2.title {:style {:font-weight :bold}} "New Entry"]
+         [:h2.title {:style {:font-weight :bold}} (if (:id new-entry) "Edit" "New Entry")]
          ]
         [:div.column.is-12
          [:div.tabs
@@ -111,14 +111,17 @@
          ]
         ]])))
 
-(defn entry [{:keys [title body updated_at id mine]}]
+(defn entry [{:keys [title body updated_at id mine] :as entry}]
   (fn []
     (let [auth @(re-frame/subscribe [:auth])]
       [:section.section
        [:div.container
         [:div.columns
          [:div.column.is-4
-          [:p.subtitle (str updated_at "  ")
+          [:p.subtitle
+           (str updated_at "  ")
+           (when mine [:a {:on-click #(re-frame/dispatch [:edit entry])} "edit"])
+           "  "
            (when mine [:a {:on-click #(re-frame/dispatch [:delete id])} "delete"])]
           [:h2.title {:style {:font-weight :bold}} title]]
          [:div.column.is-8
@@ -160,7 +163,7 @@
        [:div.columns.is-vcentered
         [:div.column
          [:h1.title "RNI Developer's Blog"]
-         [:p.subtitle "株式会社リサーチ・アンド・イノベーションの開発者ブログです"]]]]]]))
+         [:p.subtitle "開発者ブログです"]]]]]]))
 
 (defn main-panel []
   (fn []

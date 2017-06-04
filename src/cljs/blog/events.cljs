@@ -35,6 +35,14 @@
         (assoc-in [:show-menu] false))))
 
 (re-frame/reg-event-db
+  :edit
+  (fn  [db [_ entry]]
+    (-> db
+        (assoc-in [:new-entry] entry)
+        (assoc-in [:mode] :edit)
+        (assoc-in [:show-menu] false))))
+
+(re-frame/reg-event-db
   :on-change-title
   (fn  [db [_ title]]
     (assoc-in db [:new-entry :title] title)))

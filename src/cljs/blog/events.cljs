@@ -142,13 +142,13 @@
 (re-frame/reg-event-fx
   :get-entries
   [(re-frame/inject-cofx :token)]
-  (fn [_ _]
+  (fn [{:keys [token]} _]
     {:http-xhrio (-> {:method          :get
                       :uri             "/entries"
                       :on-success      [:process-entries]
                       :on-failure      [:process-error]}
                      wrap-default-http
-                     )}))
+                     (wrap-token-http token))}))
 
 (re-frame/reg-event-fx
   :auth
@@ -213,12 +213,12 @@
 
 (re-frame/reg-event-fx
   :delete
-  (fn [{:keys [db]} [_ id]]
-    {:http-xhrio {:method          :delete
-                  :uri             "/entries"
-                  :timeout         8000
-                  :params          (select-keys (:focus db) [:id])
-                  :format          (ajax/json-request-format)
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:get-entries]
-                  :on-failure      [:process-error]}}))
+  [(re-frame/inject-cofx :token)]
+  (fn [{:keys [db token]} [_ id]]
+    {:http-xhrio (-> {:method          :delete
+                      :uri             "/entries"
+                      :params          {:id id}
+                      :on-success      [:get-entries]
+                      :on-failure      [:process-error]}
+                     wrap-default-http
+                     (wrap-token-http token))}))

@@ -111,14 +111,15 @@
          ]
         ]])))
 
-(defn entry [{:keys [title body updated_at]}]
+(defn entry [{:keys [title body updated_at id mine]}]
   (fn []
     (let [auth @(re-frame/subscribe [:auth])]
       [:section.section
        [:div.container
         [:div.columns
          [:div.column.is-4
-          [:p.subtitle (str updated_at "  ") (when auth [:a "delete"])]
+          [:p.subtitle (str updated_at "  ")
+           (when mine [:a {:on-click #(re-frame/dispatch [:delete id])} "delete"])]
           [:h2.title {:style {:font-weight :bold}} title]]
          [:div.column.is-8
           [:div.content (react-raw (markdown/md->html body))]

@@ -41,7 +41,6 @@
   (codecs/bytes->hex (nonce/random-bytes 16)))
 
 (defn auth [request]
-  (log/info request)
   (if-not (authenticated? request)
     (throw-unauthorized)
     (ok {:status "Logged"
@@ -116,6 +115,24 @@
                                :updated_at (to-sql-time (now))}))
       {:status 200 :body {:message "ok"}})))
 
+(defn delete-entry
+  [{{:keys [id]} :params :as req}]
+  (if-not (authenticated? req)
+    (throw-unauthorized)
+    (do
+      (let [entry (first (select entries (where {:id id})))]
+        (if (or (nil? entry) (not= (:id entry) id))
+          {:status 404 :body {:message "not found"}}
+          (do
+            (delete entries (where {:id id}))
+            {:status 200 :body {:message "ok"}}))))))
+
+(defn get-entries
+  [{{user_id :id} :identity :as req}]
+  (->> (select entries (order :id :desc))
+       (map #(assoc % :mine (= user_id (:user_id %))))
+       (json/write-str)))
+
 (def auth-backend
   (token-backend {:authfn (fn [req token] (get @tokens (keyword token)))
                   :token-name "Bearer"}))
@@ -126,9 +143,9 @@
   (POST "/login" [] login)
   (POST "/users" [] create-user)
   (PUT "/user" [] update-user)
-  (GET "/entries" [] (json/write-str (select entries (order :id :desc))))
+  (GET "/entries" [] get-entries)
   (POST "/entries" [] create-entry)
-  (DELETE "/entries" [id] (json/write-str (delete entries (where {:id id}))))
+  (DELETE "/entries" [] delete-entry)
   (resources "/"))
 
 (def dev-handler

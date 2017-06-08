@@ -69,7 +69,7 @@
 (defn login [{{email :email password :password} :params}]
   (if-let [user (matched-user email password)]
     (let [token (random-token)]
-      (swap! tokens assoc (keyword token) (select-keys user [:email :id :level]))
+      (swap! tokens assoc (keyword token) (select-keys user [:email :id :admin]))
       (ok {:token token}))
     (bad-request {:message "wrong auth data"})))
 
@@ -91,16 +91,22 @@
         (where {:id id}))
       {:status 200 :body {:message "ok"}})))
 
+(defn force-create-user [email password admin]
+  (insert users (values {:email email
+                         :encrypted_password (encrypt password)
+                         :admin admin
+                         :created_at (to-sql-time (now))
+                         :updated_at (to-sql-time (now))})))
+
 (defn create-user [{{email :email password :password} :params :as request}]
+  (log/info "===========")
+  (log/info request)
   (if-not (authenticated? request)
     (throw-unauthorized)
-    (if-not (= :admin (:level (:identity request)))
+    (if-not (:admin (:identity request))
       {:status 400 :body {:message "not admin"}}
       (do
-        (insert users (values {:email email
-                               :encrypted_password (encrypt password)
-                               :created_at (to-sql-time (now))
-                               :updated_at (to-sql-time (now))}))
+        (force-create-user email password false)
         {:status 200 :body {:message "ok"}}))))
 
 (defn create-entry

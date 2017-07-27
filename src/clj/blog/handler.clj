@@ -164,4 +164,12 @@
     wrap-json-response
     wrap-reload))
 
-(def handler routes)
+(def handler
+  (->
+    #'routes
+    (wrap-authorization auth-backend)
+    (wrap-authentication auth-backend)
+    wrap-keyword-params
+    wrap-json-params
+    wrap-json-response
+    wrap-reload))

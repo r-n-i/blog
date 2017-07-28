@@ -4310,7 +4310,7 @@ a.nav-item.is-tab.is-active {
 @media screen and (min-width: 1000px) {
   .nav-item a.is-brand,
   a.nav-item.is-brand {
-    padding-left: 4px;
+    padding-left: 0;
   }
 }
 

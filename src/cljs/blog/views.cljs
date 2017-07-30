@@ -52,12 +52,14 @@
         [:p.control
          [:input.input {:value (:title new-entry)
                         :placeholder "Title"
-                        :on-change #(re-frame/dispatch [:on-change-title (-> % .-target .-value)])}]]]
+                        :on-change #()
+                        :on-input #(re-frame/dispatch-sync [:on-change-title (-> % .-target .-value)])}]]]
        [:div.field
         [:p.control
          [:textarea.textarea {:value (:body new-entry)
                               :placeholder "Body"
-                              :on-change #(re-frame/dispatch [:on-change-body (-> % .-target .-value)])     }]]]])))
+                              :on-change #()
+                              :on-input #(re-frame/dispatch-sync [:on-change-body (-> % .-target .-value)])}]]]])))
 
 (defn preview []
   (fn []

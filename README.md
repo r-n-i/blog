@@ -10,6 +10,7 @@ You need [leiningen](https://leiningen.org).
 ### Prepare Database
 ```
 create "blog" database in your mysql server.
+create "blog@localhost" user in your mysql server.
 ```
 
 ### Migration
@@ -30,11 +31,6 @@ lein figwheel dev
 Figwheel will automatically push cljs changes to the browser.
 
 Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
-
-```
-Email address: admin
-Password: secret
-```
 
 ## Production Build
 

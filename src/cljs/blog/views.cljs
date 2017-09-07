@@ -9,6 +9,18 @@
         (clj->js {:key (str (hash raw-html-str))
                   :dangerouslySetInnerHTML {:__html raw-html-str}})))
 
+(defn highlight-code [html-node]
+    (let [nodes (.querySelectorAll html-node "pre code")]
+          (loop [i (.-length nodes)]
+                  (when-not (neg? i)
+                            (when-let [item (.item nodes i)]
+                                        (.highlightBlock js/hljs item))
+                            (recur (dec i))))))
+
+(defn highlight [this]
+    (let [node (reagent/dom-node this)]
+          (highlight-code node)))
+
 (defn modal []
   (fn []
     (let [user-form (re-frame/subscribe [:user-form])
@@ -63,13 +75,17 @@
 
 (defn preview []
   (fn []
-    (let [new-entry @(re-frame/subscribe [:new-entry])]
-      [:div.container
-       [:p.title (:title new-entry)]
-       [:div.content
-        (react-raw (markdown/md->html (:body new-entry)))
-        ]
-       ])))
+    (reagent/create-class
+      {:component-did-update highlight
+       :reagent-render
+       (fn []
+         (let [new-entry @(re-frame/subscribe [:new-entry])]
+           [:div.container
+            [:p.title (:title new-entry)]
+            [:div.content
+             (react-raw (markdown/md->html (:body new-entry)))
+             ]
+            ]))})))
 
 (defn input-preview []
   (fn []
@@ -115,17 +131,21 @@
 
 (defn entry [{:keys [title body updated_at id mine]}]
   (fn []
-    (let [auth @(re-frame/subscribe [:auth])]
-      [:section.section
-       [:div.container
-        [:div.columns
-         [:div.column.is-4
-          [:p.subtitle (str updated_at "  ")
-           (when mine [:a {:on-click #(re-frame/dispatch [:delete id])} "delete"])]
-          [:h2.title {:style {:font-weight :bold}} title]]
-         [:div.column.is-8
-          [:div.content (react-raw (markdown/md->html body))]
-          ]]]])))
+    (reagent/create-class
+      {:component-did-mount highlight
+       :reagent-render
+       (fn []
+         (let [auth @(re-frame/subscribe [:auth])]
+           [:section.section
+            [:div.container
+             [:div.columns
+              [:div.column.is-4
+               [:p.subtitle (str updated_at "  ")
+                (when mine [:a {:on-click #(re-frame/dispatch [:delete id])} "delete"])]
+               [:h2.title {:style {:font-weight :bold}} title]]
+              [:div.column.is-8
+               [:div.content (react-raw (markdown/md->html body))]
+               ]]]]))})))
 
 (defn entries []
   (fn []
